@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Environments
+.env
+venv/
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# logs
+*.log
+
+# SQLite databases
+*.sqlite3
+
+# journal log
+journallog
+
+# static files
+static/
+
+# compiled Python files
+*.egg-info/
+
+# others
+

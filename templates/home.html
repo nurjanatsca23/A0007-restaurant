@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Фенер • Главная{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="hero-content">
+        <h2 class="hero-title">Добро пожаловать<br>в <span class="accent">Фенер</span></h2>
+        <p class="hero-text">
+            Мы объединяем традиционные рецепты и современный подход к приготовлению блюд.
+            Уютная атмосфера и качественный сервис — основа нашей работы.
+        </p>
+        <a href="{{ url_for('menu') }}" class="btn">Посмотреть меню</a>
+    </div>
+</section>
+{% endblock %}

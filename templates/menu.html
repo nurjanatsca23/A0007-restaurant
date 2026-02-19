@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Фенер • Меню{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <h2 class="section-title">Наше меню</h2>
+
+    <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" class="search-input" placeholder="Найти блюдо..." autocomplete="off">
+        <button class="search-clear" id="searchClear" style="display:none" onclick="clearSearch()">&times;</button>
+    </div>
+
+    <div class="category-tabs" id="categoryTabs">
+        <button class="tab active" data-target="all">Все</button>
+        {% for cat in categories %}
+        <button class="tab" data-target="cat-{{ loop.index }}">{{ cat.name }}</button>
+        {% endfor %}
+    </div>
+
+    {% for cat in categories %}
+    <div class="menu-category" data-category="cat-{{ loop.index }}">
+        <h3 class="category-title">{{ cat.name }}</h3>
+        <div class="menu-grid">
+            {% for dish in cat.dishes %}
+            <div class="menu-card" data-title="{{ dish.title }}" data-price="{{ dish.price }}"
+                data-desc="{{ dish.description or '' }}" data-image="{{ dish.image or '' }}">
+                <div class="card-image" onclick="openModal(this.parentNode)">
+                    <img src="{{ dish.image }}" alt="{{ dish.title }}" loading="lazy">
+                </div>
+                <div class="card-body">
+                    <div class="card-info" onclick="openModal(this.parentNode.parentNode)">
+                        <span class="dish-name">{{ dish.title }}</span>
+                        <span class="dish-price">{{ dish.price }} сом</span>
+                    </div>
+                    <button class="add-btn"
+                        onclick="addToCart('{{ dish.title }}', {{ dish.price }}, '{{ dish.image or '' }}')">
+                        +
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</section>
+
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal(event)">&times;</button>
+        <div class="modal-image" id="modalImage">
+            <img src="" alt="" id="modalImg">
+        </div>
+        <div class="modal-body">
+            <h3 class="modal-title" id="modalTitle"></h3>
+            <p class="modal-desc" id="modalDesc"></p>
+            <div class="modal-actions">
+                <span class="modal-price" id="modalPrice"></span>
+                <button class="btn modal-add-btn" id="modalAddBtn">В корзину</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+    const tabs = document.querySelectorAll('.tab');
+    const sections = document.querySelectorAll('.menu-category');
+    const allCards = document.querySelectorAll('.menu-card');
+
+    searchInput.addEventListener('input', () => {
+        const q = searchInput.value.toLowerCase().trim();
+        searchClear.style.display = q ? '' : 'none';
+
+        if (q) {
+            tabs.forEach(t => t.classList.remove('active'));
+            tabs[0].classList.add('active');
+            sections.forEach(s => s.style.display = '');
+        }
+
+        allCards.forEach(card => {
+            const title = card.dataset.title.toLowerCase();
+            card.style.display = title.includes(q) ? '' : 'none';
+        });
+
+        sections.forEach(sec => {
+            const visible = sec.querySelectorAll('.menu-card:not([style*="display: none"])');
+            sec.style.display = visible.length ? '' : 'none';
+        });
+    });
+
+    function clearSearch() {
+        searchInput.value = '';
+        searchClear.style.display = 'none';
+        allCards.forEach(card => card.style.display = '');
+        sections.forEach(sec => sec.style.display = '');
+        tabs.forEach(t => t.classList.remove('active'));
+        tabs[0].classList.add('active');
+    }
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const target = tab.dataset.target;
+            searchInput.value = '';
+            searchClear.style.display = 'none';
+            allCards.forEach(card => card.style.display = '');
+            sections.forEach(sec => {
+                sec.style.display = (target === 'all' || sec.dataset.category === target) ? '' : 'none';
+            });
+        });
+    });
+
+
+    const overlay = document.getElementById('modalOverlay');
+    const modalImage = document.getElementById('modalImage');
+    const modalImg = document.getElementById('modalImg');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDesc = document.getElementById('modalDesc');
+    const modalPrice = document.getElementById('modalPrice');
+    const modalAddBtn = document.getElementById('modalAddBtn');
+
+    let currentDish = {};
+
+    function openModal(card) {
+        currentDish = {
+            title: card.dataset.title,
+            price: card.dataset.price,
+            desc: card.dataset.desc,
+            image: card.dataset.image
+        };
+
+        modalTitle.textContent = currentDish.title;
+        modalDesc.textContent = currentDish.desc || 'Подробное описание скоро появится.';
+        modalPrice.textContent = currentDish.price + ' сом';
+
+        if (currentDish.image) {
+            modalImg.src = currentDish.image;
+            modalImg.alt = currentDish.title;
+            modalImage.style.display = '';
+        } else {
+            modalImage.style.display = 'none';
+        }
+
+        modalAddBtn.onclick = () => {
+            addToCart(currentDish.title, currentDish.price, currentDish.image);
+            closeModal();
+        };
+
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(e) {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+</script>
+{% endblock %}

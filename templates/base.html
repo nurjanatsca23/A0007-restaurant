@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Фенер • Ресторан{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="header-inner">
+            <a href="{{ url_for('home') }}" class="logo">
+                <img class="logo-img" src="https://taplink.st/a/d/5/e/8/c74f4e.png?1" alt="Фенер">
+                <div class="logo-text">
+                    <h1>Фенер</h1>
+                    <span class="logo-subtitle">слияние традиций</span>
+                </div>
+            </a>
+
+            <div class="header-right">
+                <button class="cart-btn" id="cartBtn" onclick="toggleCart()">
+                    <span class="cart-icon">🛒</span>
+                    <span class="cart-badge" id="cartBadge">0</span>
+                </button>
+                <button class="mobile-toggle" id="mobileToggle" aria-label="Меню">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+
+            <nav class="nav" id="mainNav">
+                <a href="{{ url_for('home') }}"
+                    class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">Главная</a>
+                <a href="{{ url_for('menu') }}"
+                    class="nav-link {% if request.endpoint == 'menu' %}active{% endif %}">Меню</a>
+                <a href="{{ url_for('contacts') }}"
+                    class="nav-link {% if request.endpoint == 'contacts' %}active{% endif %}">Контакты</a>
+                <a href="{{ url_for('reviews') }}"
+                    class="nav-link {% if request.endpoint == 'reviews' %}active{% endif %}">Отзывы</a>
+            </nav>
+        </div>
+    </header>
+
+
+    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+    <aside class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>Корзина</h3>
+            <button class="cart-sidebar-close" onclick="toggleCart()">&times;</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty" id="cartEmpty">
+                <span>🛒</span>
+                <p>Корзина пуста</p>
+            </div>
+        </div>
+        <div class="cart-footer" id="cartFooter" style="display:none;">
+            <div class="cart-total">
+                <span>Итого:</span>
+                <span id="cartTotal">0 сом</span>
+            </div>
+            <button class="btn cart-order-btn" onclick="placeOrder()">Оформить заказ</button>
+        </div>
+    </aside>
+
+
+    <div class="modal-overlay" id="orderModal" onclick="closeOrderModal(event)">
+        <div class="modal-content order-modal" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeOrderModal(event)">&times;</button>
+            <div class="order-success">
+                <span class="order-icon">✅</span>
+                <h3>Заказ оформлен!</h3>
+                <p class="order-text">Ваш тестовый заказ принят. Спасибо!</p>
+                <div class="order-summary" id="orderSummary"></div>
+                <button class="btn" onclick="closeOrderModal(event)">Отлично</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="footer-logo">☕ Фенер</span>
+                <p class="footer-tagline">Слияние традиций</p>
+            </div>
+            <div class="footer-info">
+                <p>г. Жалал-Абад, ул. Шабданбая Абдраманова 1</p>
+                <p>+996 222 221 133</p>
+                <p>Ежедневно с 10:00 до 23:00</p>
+            </div>
+            <div class="footer-copy">
+                <p>&copy; 2026 Фенер. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+
+        const toggle = document.getElementById('mobileToggle');
+        const nav = document.getElementById('mainNav');
+        toggle.addEventListener('click', () => {
+            nav.classList.toggle('open');
+            toggle.classList.toggle('active');
+        });
+
+
+        let cart = JSON.parse(localStorage.getItem('fener_cart') || '[]');
+
+        function saveCart() {
+            localStorage.setItem('fener_cart', JSON.stringify(cart));
+            updateCartUI();
+        }
+
+        function addToCart(title, price, image) {
+            const existing = cart.find(item => item.title === title);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ title, price: Number(price), image, qty: 1 });
+            }
+            saveCart();
+            showToast('Добавлено: ' + title);
+        }
+
+        function changeQty(title, delta) {
+            const item = cart.find(i => i.title === title);
+            if (!item) return;
+            item.qty += delta;
+            if (item.qty <= 0) {
+                cart = cart.filter(i => i.title !== title);
+            }
+            saveCart();
+        }
+
+        function removeFromCart(title) {
+            cart = cart.filter(i => i.title !== title);
+            saveCart();
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cartBadge');
+            const items = document.getElementById('cartItems');
+            const footer = document.getElementById('cartFooter');
+            const empty = document.getElementById('cartEmpty');
+            const totalEl = document.getElementById('cartTotal');
+
+            const totalQty = cart.reduce((s, i) => s + i.qty, 0);
+            const totalPrice = cart.reduce((s, i) => s + i.price * i.qty, 0);
+
+            badge.textContent = totalQty;
+            badge.style.display = totalQty > 0 ? '' : 'none';
+
+            if (cart.length === 0) {
+                empty.style.display = '';
+                footer.style.display = 'none';
+
+                items.querySelectorAll('.cart-item').forEach(el => el.remove());
+                return;
+            }
+
+            empty.style.display = 'none';
+            footer.style.display = '';
+            totalEl.textContent = totalPrice + ' сом';
+
+
+            items.querySelectorAll('.cart-item').forEach(el => el.remove());
+
+            cart.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'cart-item';
+                row.innerHTML = `
+                    <div class="cart-item-img">
+                        ${item.image ? '<img src="' + item.image + '" alt="">' : '<span>🍽</span>'}
+                    </div>
+                    <div class="cart-item-info">
+                        <span class="cart-item-title">${item.title}</span>
+                        <span class="cart-item-price">${item.price * item.qty} сом</span>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button onclick="changeQty('${item.title.replace(/'/g, "\\'")}', -1)">−</button>
+                        <span>${item.qty}</span>
+                        <button onclick="changeQty('${item.title.replace(/'/g, "\\'")}', 1)">+</button>
+                    </div>
+                `;
+                items.appendChild(row);
+            });
+        }
+
+        function toggleCart() {
+            const sidebar = document.getElementById('cartSidebar');
+            const overlay = document.getElementById('cartOverlay');
+            const isOpen = sidebar.classList.contains('open');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+            document.body.style.overflow = isOpen ? '' : 'hidden';
+        }
+
+        function placeOrder() {
+            const summary = document.getElementById('orderSummary');
+            const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+            let html = '<ul>';
+            cart.forEach(i => {
+                html += `<li>${i.title} × ${i.qty} — ${i.price * i.qty} сом</li>`;
+            });
+            html += '</ul><p class="order-total-line"><strong>Итого: ' + total + ' сом</strong></p>';
+            summary.innerHTML = html;
+
+
+            document.getElementById('orderModal').classList.add('open');
+            toggleCart();
+
+
+            cart = [];
+            saveCart();
+        }
+
+        function closeOrderModal(e) {
+            document.getElementById('orderModal').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+
+        function showToast(text) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = text;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+
+        updateCartUI();
+    </script>
+
+</body>
+
+</html>
