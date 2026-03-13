@@ -23,11 +23,9 @@ venv/
 # journal log
 journallog
 
-# static files
-static/
-
 # compiled Python files
 *.egg-info/
 
 # others
 
+database.db

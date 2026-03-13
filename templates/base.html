@@ -11,6 +11,8 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="https://taplink.st/a/d/5/e/8/c74f4e.png?1">
+    {% block extra_css %}{% endblock %}
 </head>
 
 <body>
@@ -38,14 +40,10 @@
             </div>
 
             <nav class="nav" id="mainNav">
-                <a href="{{ url_for('home') }}"
-                    class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">Главная</a>
-                <a href="{{ url_for('menu') }}"
-                    class="nav-link {% if request.endpoint == 'menu' %}active{% endif %}">Меню</a>
-                <a href="{{ url_for('contacts') }}"
-                    class="nav-link {% if request.endpoint == 'contacts' %}active{% endif %}">Контакты</a>
-                <a href="{{ url_for('reviews') }}"
-                    class="nav-link {% if request.endpoint == 'reviews' %}active{% endif %}">Отзывы</a>
+                <a href="{{ url_for('home') }}#hero" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">Главная</a>
+                <a href="{{ url_for('menu') }}" class="nav-link {% if request.endpoint == 'menu' %}active{% endif %}">Меню</a>
+                <a href="{{ url_for('home') }}#contacts" class="nav-link">Контакты</a>
+                <a href="{{ url_for('home') }}#reviews" class="nav-link">Отзывы</a>
             </nav>
         </div>
     </header>
@@ -64,6 +62,10 @@
             </div>
         </div>
         <div class="cart-footer" id="cartFooter" style="display:none;">
+            <div class="cart-form">
+                <input type="text" id="custName" class="cart-input" placeholder="Ваше имя" required>
+                <input type="tel" id="custPhone" class="cart-input" placeholder="Ваш телефон" required>
+            </div>
             <div class="cart-total">
                 <span>Итого:</span>
                 <span id="cartTotal">0 сом</span>
@@ -116,8 +118,42 @@
             toggle.classList.toggle('active');
         });
 
+        // Close mobile menu when a nav link is clicked
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                // Determine if this is an anchor on the same page
+                const isHashOnSamePage = window.location.pathname === link.pathname && link.hash;
+                
+                nav.classList.remove('open');
+                toggle.classList.remove('active');
+                
+                if (isHashOnSamePage) {
+                    e.preventDefault();
+                    const targetId = link.hash.substring(1);
+                    const targetEl = document.getElementById(targetId);
+                    if (targetEl) {
+                        targetEl.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        // Update URL hash without jumping
+                        history.pushState(null, null, link.hash);
+                    }
+                }
+            });
+        });
 
-        let cart = JSON.parse(localStorage.getItem('fener_cart') || '[]');
+
+        let cart = [];
+        try {
+            const saved = localStorage.getItem('fener_cart');
+            if (saved) {
+                cart = JSON.parse(saved);
+            }
+        } catch (e) {
+            console.error('Не удалось восстановить корзину', e);
+        }
 
         function saveCart() {
             localStorage.setItem('fener_cart', JSON.stringify(cart));
@@ -209,22 +245,65 @@
         }
 
         function placeOrder() {
+            if (cart.length === 0) return;
+
+            const nameInput = document.getElementById('custName');
+            const phoneInput = document.getElementById('custPhone');
+
+            if (!nameInput.value.trim() || !phoneInput.value.trim()) {
+                alert('Пожалуйста, введите ваше имя и телефон, чтобы мы могли связаться с вами.');
+                return;
+            }
+
             const summary = document.getElementById('orderSummary');
-            const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-            let html = '<ul>';
-            cart.forEach(i => {
-                html += `<li>${i.title} × ${i.qty} — ${i.price * i.qty} сом</li>`;
+            const btn = document.querySelector('.cart-order-btn');
+            const originalText = btn.textContent;
+            
+            btn.textContent = 'Оформление...';
+            btn.disabled = true;
+
+            const payload = {
+                cart: cart,
+                name: nameInput.value.trim(),
+                phone: phoneInput.value.trim()
+            };
+
+            fetch('/api/order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+                    let html = '<ul>';
+                    cart.forEach(i => {
+                        html += `<li>${i.title} × ${i.qty} — ${i.price * i.qty} сом</li>`;
+                    });
+                    html += `</ul><p class="order-total-line"><strong>Итого: ${total} сом</strong></p>`;
+                    html += `<p style="font-size: 13px; color: var(--color-text-light); margin-top: 10px;">Номер заказа: #${data.order_id}</p>`;
+                    
+                    summary.innerHTML = html;
+                    document.getElementById('orderModal').classList.add('open');
+                    toggleCart();
+
+                    cart = [];
+                    saveCart();
+                } else {
+                    alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Произошла ошибка соединения с сервером.');
+            })
+            .finally(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
             });
-            html += '</ul><p class="order-total-line"><strong>Итого: ' + total + ' сом</strong></p>';
-            summary.innerHTML = html;
-
-
-            document.getElementById('orderModal').classList.add('open');
-            toggleCart();
-
-
-            cart = [];
-            saveCart();
         }
 
         function closeOrderModal(e) {
@@ -250,7 +329,7 @@
 
         updateCartUI();
     </script>
-
+    {% block extra_js %}{% endblock %}
 </body>
 
 </html>

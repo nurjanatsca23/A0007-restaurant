@@ -1,15 +1,724 @@
 {% extends "base.html" %}
 {% block title %}Фенер • Главная{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Base configuration for scroll snap */
+    html {
+        scroll-behavior: smooth;
+        scroll-snap-type: y mandatory;
+        overflow-x: hidden;
+    }
+    
+    body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        background-color: var(--color-bg);
+    }
+    
+    .main-content {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Full screen sections */
+    .fs-section {
+        min-height: 100vh;
+        height: auto; /* Allow content to dictate height */
+        width: 100%;
+        scroll-snap-align: start;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 120px 20px 80px 20px; /* Safer padding to avoid overlap */
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    
+    .footer {
+        scroll-snap-align: start;
+    }
+
+
+    
+    /* Reveal Animations on Scroll */
+    .animate-on-scroll {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+    
+    .fs-section.visible .animate-on-scroll {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .delay-1 { transition-delay: 0.1s; }
+    .delay-2 { transition-delay: 0.3s; }
+    .delay-3 { transition-delay: 0.5s; }
+
+    /* --- Hero Section --- */
+    #hero {
+        background: linear-gradient(rgba(43, 26, 16, 0.7), rgba(92, 58, 33, 0.6)), url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=2000') center/cover no-repeat;
+        color: #FAF6F1;
+        text-align: center;
+        padding: 0 20px;
+    }
+    
+    .hero-content {
+        max-width: 800px;
+    }
+    
+    .hero-title {
+        font-family: var(--font-display);
+        font-size: 5rem;
+        font-weight: 700;
+        margin-bottom: 25px;
+        line-height: 1.1;
+        text-shadow: 0px 4px 20px rgba(0, 0, 0, 0.8), 2px 2px 10px rgba(0,0,0,0.6);
+        color: #ffffff;
+    }
+    
+    .accent {
+        color: #F4D06F; /* brighter accent for contrast on dark bg */
+        font-style: italic;
+    }
+    
+    .hero-text {
+        font-family: var(--font-body);
+        font-size: 1.35rem;
+        line-height: 1.6;
+        margin: 0 auto 40px auto;
+        opacity: 1;
+        font-weight: 400;
+        text-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8);
+        color: #fcfcfc;
+    }
+    
+    .action-btn {
+        background: var(--color-primary);
+        color: #fff;
+        padding: 16px 36px;
+        text-decoration: none;
+        border-radius: var(--radius-md);
+        font-size: 1.15rem;
+        font-weight: 600;
+        transition: all var(--transition);
+        display: inline-block;
+        border: 2px solid var(--color-primary);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .action-btn:hover {
+        background: var(--color-primary-light);
+        border-color: var(--color-primary-light);
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .btn-outline {
+        background: transparent;
+        color: var(--color-primary);
+        border: 2px solid var(--color-primary);
+        box-shadow: none;
+    }
+    .btn-outline:hover {
+        background: var(--color-primary);
+        color: #fff;
+    }
+
+    /* Abstract background shapes */
+    .blob {
+        position: absolute;
+        filter: blur(80px);
+        z-index: -1;
+        opacity: 0.5;
+        border-radius: 50%;
+    }
+
+    .section-title {
+        font-family: var(--font-display);
+        font-size: 3.5rem;
+        margin-bottom: 50px;
+        text-align: center;
+        color: var(--color-primary);
+        position: relative;
+    }
+    
+    /* --- About Cuisine Section --- */
+    #about {
+        background: var(--color-bg);
+        color: var(--color-text);
+    }
+    
+    #about .blob {
+        width: 500px;
+        height: 500px;
+        background: var(--color-accent-soft);
+        top: -10%;
+        right: -10%;
+    }
+    
+    .about-content {
+        display: flex;
+        align-items: center;
+        gap: 60px;
+        max-width: 1100px;
+        width: 100%;
+        z-index: 2;
+    }
+    
+    .about-text-box {
+        flex: 1;
+    }
+    
+    .about-text-box h3 {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        color: var(--color-primary);
+        margin-bottom: 20px;
+    }
+    
+    .about-text-box p {
+        font-size: 1.15rem;
+        line-height: 1.8;
+        color: var(--color-text); /* Made darker for better contrast */
+        margin-bottom: 20px;
+    }
+    
+    .btn-large {
+        padding: 18px 42px;
+        font-size: 1.25rem;
+        background: var(--color-primary);
+        color: #fff;
+        border: none;
+        box-shadow: 0 8px 20px rgba(92, 58, 33, 0.4);
+    }
+    
+    .btn-large:hover {
+        background: #4A2E1A;
+        transform: translateY(-4px);
+        box-shadow: 0 12px 25px rgba(92, 58, 33, 0.6);
+    }
+    
+    .about-image-grid {
+        flex: 1.2;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 15px;
+        position: relative;
+    }
+    
+    .about-img {
+        width: 100%;
+        height: 100%;
+        min-height: 200px;
+        object-fit: cover;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        transition: transform 0.4s ease;
+    }
+    
+    .img-main {
+        grid-column: 1 / 2;
+        grid-row: 1 / 3;
+        min-height: 415px;
+    }
+    
+    .about-img:hover {
+        transform: scale(1.03);
+    }
+
+    /* --- Contacts Section --- */
+    #contacts {
+        background: var(--color-surface);
+    }
+    
+    #contacts .blob {
+        width: 600px;
+        height: 600px;
+        background: var(--color-olive-soft);
+        bottom: -20%;
+        left: -10%;
+    }
+    
+    .contacts-container {
+        display: flex;
+        align-items: stretch;
+        max-width: 900px;
+        width: 100%;
+        margin: 0 auto;
+        background: var(--color-surface);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+        z-index: 2;
+    }
+    
+    .contacts-details {
+        padding: 40px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 30px;
+        font-size: 1.15rem;
+        color: var(--color-text);
+    }
+    
+    .contact-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--color-accent-soft);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--color-primary);
+    }
+    
+    .map-box {
+        flex: 1;
+        min-height: 400px;
+        background: var(--color-border);
+        position: relative;
+    }
+
+    /* --- Reviews Section --- */
+    #reviews {
+        background: var(--color-bg);
+        color: var(--color-text);
+        padding-top: 20px !important;
+        min-height: auto !important;
+    }
+    
+    #reviews .blob {
+        width: 700px;
+        height: 700px;
+        background: var(--color-accent-soft);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.3;
+    }
+    
+    .reviews-carousel {
+        display: flex;
+        gap: 30px;
+        max-width: 1400px; /* Widened from 900px */
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        padding: 20px;
+        z-index: 2;
+    }
+    
+    .review-card {
+        flex: 1 1 320px;
+        max-width: 450px;
+        min-height: 300px; /* Make it longer vertically */
+        background: var(--color-surface);
+        padding: 30px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--color-border);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .review-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .review-rating {
+        color: var(--color-accent);
+        font-size: 1.4rem;
+        letter-spacing: 2px;
+        margin-bottom: 20px;
+    }
+    
+    .review-text {
+        font-style: italic;
+        font-size: 1.05rem;
+        line-height: 1.6;
+        margin-bottom: 25px;
+        color: var(--color-text-light);
+        flex-grow: 1;
+    }
+    
+    .review-author {
+        font-weight: 600;
+        color: var(--color-primary);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .author-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--color-accent-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: var(--color-primary);
+        font-size: 1.1rem;
+    }
+    
+    /* --- Gallery Section --- */
+    #gallery {
+        background: var(--color-bg);
+        color: var(--color-text);
+        position: relative;
+        padding-bottom: 20px !important;
+        min-height: auto !important;
+    }
+    
+    #gallery .blob {
+        width: 800px;
+        height: 800px;
+        background: var(--color-accent-soft);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.15;
+    }
+
+    .photo-grid {
+        max-width: 1100px;
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        z-index: 2;
+    }
+
+    .photo-grid-item {
+        background: var(--color-surface);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        box-shadow: var(--shadow-md);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        padding: 10px;
+    }
+
+    .photo-grid-item:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .photo-grid-item img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: var(--radius-sm);
+    }
+    
+    /* --- Menu Preview Section --- */
+    #menu-preview {
+        background: var(--color-surface);
+    }
+
+    .menu-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+        max-width: 1100px;
+        width: 100%;
+        z-index: 2;
+    }
+
+    .menu-preview-card {
+        background: var(--color-bg);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .menu-preview-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .menu-preview-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+    }
+
+    .menu-preview-info {
+        padding: 18px 20px;
+    }
+
+    .menu-preview-info h4 {
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+        color: var(--color-primary);
+        margin-bottom: 6px;
+    }
+
+    .menu-preview-info .price {
+        font-weight: 600;
+        color: var(--color-accent);
+        font-size: 1.05rem;
+    }
+
+    .menu-preview-link {
+        text-align: center;
+        margin-top: 40px;
+        z-index: 2;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .hero-title { font-size: 3.5rem; }
+        .about-content { flex-direction: column; gap: 40px; text-align: center; }
+        .about-features { justify-content: center; text-align: left; }
+        .contacts-container { flex-direction: column; margin: 0 20px; width: auto; }
+        .map-box { min-height: 300px; }
+    }
+    
+    @media (max-width: 768px) {
+        .hero-title { font-size: 2.8rem; }
+        .section-title { font-size: 2.5rem; margin-bottom: 30px; }
+        .contacts-details { padding: 30px 20px; }
+        .fs-section { padding: 100px 15px 40px 15px; }
+        #gallery { padding: 40px 15px; }
+        html { scroll-snap-type: none; }
+        .about-image-grid { display: grid; grid-template-columns: 1fr; grid-template-rows: auto; }
+        .img-main { grid-column: 1; grid-row: 1; min-height: 250px; }
+        .photo-grid { columns: 2; }
+    }
+
+    @media (max-width: 480px) {
+        .photo-grid { columns: 1; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="page-hero">
+
+
+<section id="hero" class="fs-section visible">
     <div class="hero-content">
-        <h2 class="hero-title">Добро пожаловать<br>в <span class="accent">Фенер</span></h2>
-        <p class="hero-text">
-            Мы объединяем традиционные рецепты и современный подход к приготовлению блюд.
-            Уютная атмосфера и качественный сервис — основа нашей работы.
+        <h2 class="hero-title animate-on-scroll delay-1">Добро пожаловать<br>в <span class="accent">Фенер</span></h2>
+        <p class="hero-text animate-on-scroll delay-2">
+            Идеальное сочетание традиционных рецептов и современной подачи.
+            Погрузитесь в атмосферу тепла, уюта и непревзойденного вкуса.
         </p>
-        <a href="{{ url_for('menu') }}" class="btn">Посмотреть меню</a>
+        <div class="animate-on-scroll delay-3">
+            <a href="{{ url_for('menu') }}" class="action-btn">Посмотреть меню</a>
+        </div>
     </div>
 </section>
+
+<section id="menu-preview" class="fs-section">
+    <div class="blob" style="width:500px;height:500px;background:var(--color-olive-soft);top:-5%;left:-10%;"></div>
+    <h2 class="section-title animate-on-scroll delay-1">Наше меню</h2>
+    <div class="menu-preview-grid animate-on-scroll delay-2">
+        <div class="menu-preview-card">
+            <img src="https://taplink.st/p/a/4/d/d/68188575.webp" alt="Салат Фенер">
+            <div class="menu-preview-info">
+                <h4>Фирменный салат "Фенер"</h4>
+                <span class="price">490 сом</span>
+            </div>
+        </div>
+        <div class="menu-preview-card">
+            <img src="https://taplink.st/p/c/3/0/f/68772187.webp" alt="Керамите кофте">
+            <div class="menu-preview-info">
+                <h4>Керамите кофте</h4>
+                <span class="price">470 сом</span>
+            </div>
+        </div>
+        <div class="menu-preview-card">
+            <img src="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&h=400&fit=crop" alt="Филадельфия">
+            <div class="menu-preview-info">
+                <h4>Филадельфия классик</h4>
+                <span class="price">450 сом</span>
+            </div>
+        </div>
+        <div class="menu-preview-card">
+            <img src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=600&h=400&fit=crop" alt="Рибай стейк">
+            <div class="menu-preview-info">
+                <h4>Рибай стейк</h4>
+                <span class="price">900 сом</span>
+            </div>
+        </div>
+    </div>
+    <div class="menu-preview-link animate-on-scroll delay-3">
+        <a href="{{ url_for('menu') }}" class="action-btn">Посмотреть всё меню</a>
+    </div>
+</section>
+
+<section id="about" class="fs-section">
+    <div class="blob"></div>
+    <div class="about-content">
+        <div class="about-text-box animate-on-scroll delay-1">
+            <h2 class="section-title" style="text-align: left; margin-bottom: 20px;">О нашей кухне</h2>
+            <p>
+                В ресторане <strong>Фенер</strong> мы чтим наследие восточной кулинарии, бережно сохраняя аутентичные рецепты,
+                передаваемые из поколения в поколение. Наши блюда — это не просто еда, это настоящая философия вкуса, 
+                в которой переплетаются яркие ароматы пряностей, сочность отборного мяса и свежесть овощей.
+            </p>
+            <p>
+                Каждый ингредиент отбирается с особой тщательностью. Мы используем только натуральные специи, 
+                свежую зелень и лучшую выпечку, чтобы подарить вам теплые воспоминания о настоящем восточном гостеприимстве.
+            </p>
+            
+            <div style="margin-top: 40px; margin-bottom: 20px;">
+                <a href="{{ url_for('menu') }}" class="action-btn btn-large">Посмотреть меню</a>
+            </div>
+        </div>
+        <div class="about-image-grid animate-on-scroll delay-2">
+            <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=800" class="about-img img-main" alt="Аппетитное мясо">
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800" class="about-img" alt="Эстетичная подача блюда">
+            <img src="https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&q=80&w=800" class="about-img" alt="Восточные тефтели">
+        </div>
+    </div>
+</section>
+
+<section id="contacts" class="fs-section">
+    <div class="blob"></div>
+    <h2 class="section-title animate-on-scroll delay-1">Как нас найти</h2>
+    <div class="contacts-container animate-on-scroll delay-2">
+        <div class="contacts-details">
+            <div class="contact-item">
+                <div class="contact-icon">📍</div>
+                <div>
+                    <strong>Адрес</strong><br>
+                    г. Жалал-Абад, ул. Шабданбая Абдраманова 1
+                </div>
+            </div>
+            <div class="contact-item">
+                <div class="contact-icon">📞</div>
+                <div>
+                    <strong>Телефон</strong><br>
+                    +996 222 221 133
+                </div>
+            </div>
+            <div class="contact-item">
+                <div class="contact-icon">🕒</div>
+                <div>
+                    <strong>Режим работы</strong><br>
+                    Ежедневно с 10:00 до 23:00
+                </div>
+            </div>
+        </div>
+        <div class="map-box">
+            <a class="dg-widget-link" href="http://2gis.kg/dzhalal-abad/firm/70000001096321190/center/72.982543,40.952977/zoom/16?utm_medium=widget-source&utm_campaign=firmonmap&utm_source=bigMap">Посмотреть на карте Жалал-Абада</a>
+            <div class="dg-widget-link"><a href="http://2gis.kg/dzhalal-abad/center/72.982543,40.952977/zoom/16/routeTab/rsType/bus/to/72.982543,40.952977╎Фенер?utm_medium=widget-source&utm_campaign=firmonmap&utm_source=route">Найти проезд до Фенер</a></div>
+            <script charset="utf-8" src="https://widgets.2gis.com/js/DGWidgetLoader.js"></script>
+            <script charset="utf-8">new DGWidgetLoader({"width":"100%","height":"100%","borderColor":"#a3a3a3","pos":{"lat":40.952977,"lon":72.982543,"zoom":16},"opt":{"city":"dzhalal-abad"},"org":[{"id":"70000001096321190"}]});</script>
+        </div>
+    </div>
+</section>
+
+<section id="gallery" class="fs-section">
+    <div class="blob"></div>
+    <h2 class="section-title animate-on-scroll delay-1" style="margin-bottom: 30px;">Атмосфера ресторана</h2>
+    <div class="photo-grid animate-on-scroll delay-2">
+        <div class="photo-grid-item">
+            <img src="{{ url_for('static', filename='photos/5280870811554223140.jpg') }}" alt="Атмосфера ресторана">
+        </div>
+        <div class="photo-grid-item">
+            <img src="{{ url_for('static', filename='photos/5280870811554223141.jpg') }}" alt="Интерьер">
+        </div>
+        <div class="photo-grid-item">
+            <img src="{{ url_for('static', filename='photos/5280870811554223142.jpg') }}" alt="Детали">
+        </div>
+        <div class="photo-grid-item">
+            <img src="{{ url_for('static', filename='photos/5280870811554223143.jpg') }}" alt="Зал">
+        </div>
+        <div class="photo-grid-item">
+            <img src="{{ url_for('static', filename='photos/5280870811554223144.jpg') }}" alt="Места">
+        </div>
+        <div class="photo-grid-item">
+            <img src="{{ url_for('static', filename='photos/5280870811554223145.jpg') }}" alt="Внутри">
+        </div>
+    </div>
+</section>
+
+<section id="reviews" class="fs-section">
+    <div class="blob"></div>
+    <h2 class="section-title animate-on-scroll delay-1">Что говорят гости</h2>
+    <div class="reviews-carousel animate-on-scroll delay-2">
+        <div class="review-card">
+            <div class="review-rating">★★★★★</div>
+            <p class="review-text">"Фенер один из лучших кафе, спасибо за вашу работу и за вкусную еду, нас обслуживала официантка Аяна, очень вежливая и хорошо выполняет свою работу."</p>
+            <div class="review-author">
+                <div class="author-avatar">А</div>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span>Айдос Добулбеков</span>
+                    <span style="font-size:0.85rem; color:var(--color-text-light); font-weight:normal;">10 февраля 2026</span>
+                </div>
+            </div>
+        </div>
+        <div class="review-card">
+            <div class="review-rating">★★★★★</div>
+            <p class="review-text">"Был уникальный ужин, отличный сервис и приятная атмосфера, ещё не раз приду ☺️☺️"</p>
+            <div class="review-author">
+                <div class="author-avatar">E</div>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span>Erbol Sheraliev</span>
+                    <span style="font-size:0.85rem; color:var(--color-text-light); font-weight:normal;">9 февраля 2026</span>
+                </div>
+            </div>
+        </div>
+        <div class="review-card">
+            <div class="review-rating">★★★★★</div>
+            <p class="review-text">"Были с подругами в ресторане Фенер, весь персонал очень хороший, вежливый и знают всё о блюдах, очень классно 🫶🏻🫶🏻🫶🏻"</p>
+            <div class="review-author">
+                <div class="author-avatar">Н</div>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span>Насипа Шайлообекова</span>
+                    <span style="font-size:0.85rem; color:var(--color-text-light); font-weight:normal;">9 февраля 2026</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const sections = document.querySelectorAll('.fs-section');
+
+    // Intersection Observer for scroll reveal animations
+    const observerOptions = {
+        root: null,
+        rootMargin: '-50px 0px -50px 0px',
+        threshold: 0.2
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, observerOptions);
+
+    sections.forEach(sec => observer.observe(sec));
+});
+</script>
 {% endblock %}
