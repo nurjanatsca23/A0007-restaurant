@@ -294,6 +294,16 @@
         min-height: 400px;
         background: var(--color-border);
         position: relative;
+        overflow: hidden;
+    }
+    
+    .map-box iframe,
+    .map-box > div:not(.dg-widget-link) {
+        width: 100% !important;
+        height: 100% !important;
+        position: absolute;
+        top: 0;
+        left: 0;
     }
 
     /* --- Reviews Section --- */
@@ -494,7 +504,12 @@
         .about-content { flex-direction: column; gap: 40px; text-align: center; }
         .about-features { justify-content: center; text-align: left; }
         .contacts-container { flex-direction: column; margin: 0 20px; width: auto; }
-        .map-box { min-height: 300px; }
+        .map-box {
+            min-height: 350px;
+            aspect-ratio: 16 / 10;
+            width: 100%;
+            position: relative;
+        }
     }
     
     @media (max-width: 768px) {
@@ -507,6 +522,10 @@
         .about-image-grid { display: grid; grid-template-columns: 1fr; grid-template-rows: auto; }
         .img-main { grid-column: 1; grid-row: 1; min-height: 250px; }
         .photo-grid { columns: 2; }
+        .map-box {
+            min-height: 280px;
+            aspect-ratio: 4 / 3;
+        }
     }
 
     @media (max-width: 480px) {
@@ -539,28 +558,18 @@
             <img src="https://taplink.st/p/a/4/d/d/68188575.webp" alt="Салат Фенер">
             <div class="menu-preview-info">
                 <h4>Фирменный салат "Фенер"</h4>
-                <span class="price">490 сом</span>
             </div>
         </div>
         <div class="menu-preview-card">
             <img src="https://taplink.st/p/c/3/0/f/68772187.webp" alt="Керамите кофте">
             <div class="menu-preview-info">
                 <h4>Керамите кофте</h4>
-                <span class="price">470 сом</span>
             </div>
         </div>
         <div class="menu-preview-card">
             <img src="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&h=400&fit=crop" alt="Филадельфия">
             <div class="menu-preview-info">
                 <h4>Филадельфия классик</h4>
-                <span class="price">450 сом</span>
-            </div>
-        </div>
-        <div class="menu-preview-card">
-            <img src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=600&h=400&fit=crop" alt="Рибай стейк">
-            <div class="menu-preview-info">
-                <h4>Рибай стейк</h4>
-                <span class="price">900 сом</span>
             </div>
         </div>
     </div>

@@ -362,6 +362,15 @@ img {
     scrollbar-width: thin;
     scrollbar-color: var(--color-accent-soft) transparent;
     -webkit-overflow-scrolling: touch;
+    position: sticky;
+    top: 72px;
+    z-index: 50;
+    background-color: var(--color-bg);
+    padding-top: 12px;
+    margin-left: -24px;
+    margin-right: -24px;
+    padding-left: 24px;
+    padding-right: 24px;
 }
 
 .category-tabs::-webkit-scrollbar {
@@ -1046,6 +1055,10 @@ img {
 @media (max-width: 768px) {
     .header-inner {
         height: 60px;
+    }
+
+    .category-tabs {
+        top: 60px;
     }
 
     .logo-text h1 {
